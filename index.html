@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>FinancePro • Acesso Seguro</title>
+    
+    <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #007AFF;
+            --primary-hover: #0063CC;
+            --success: #34C759;
+            --danger: #FF3B30;
+            --system-gray: #8E8E93;
+            --background: #F2F2F7;
+            --surface: #FFFFFF;
+            --border: rgba(60, 60, 67, 0.12);
+            --radius-ios: 20px;
+            --shadow-ios: 0 10px 40px rgba(0,0,0,0.06);
+        }
+
+        * { box-sizing: border-box; font-family: 'SF Pro Display', sans-serif; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--background);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container { width: 100%; max-width: 420px; position: relative; }
+
+        .card {
+            background: var(--surface);
+            padding: 40px 32px;
+            border-radius: 28px;
+            border: 0.5px solid var(--border);
+            box-shadow: var(--shadow-ios);
+            text-align: center;
+            display: none;
+            animation: slideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .card.active { display: block; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .logo-text {
+            font-weight: 800; font-size: 30px;
+            background: linear-gradient(145deg, #1c1c1e, #3a3a3c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .subtitle { font-size: 14px; color: var(--system-gray); font-weight: 500; margin-bottom: 24px; display: block; line-height: 1.4; }
+
+        .form-group { text-align: left; margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 800; color: var(--system-gray); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 4px; }
+
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-wrapper i { position: absolute; left: 16px; color: var(--system-gray); font-size: 20px; }
+
+        input {
+            width: 100%; padding: 15px 15px 15px 48px;
+            border-radius: 16px; border: 1.5px solid transparent;
+            background: #F5F5F7; font-size: 16px; outline: none;
+            transition: all 0.3s;
+        }
+
+        input:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1); }
+
+        .code-container { display: flex; justify-content: center; gap: 12px; margin: 20px 0; }
+        .code-input {
+            width: 60px; height: 70px; padding: 0; text-align: center;
+            font-size: 24px; font-weight: 800; border-radius: 16px;
+            background: #F5F5F7; border: 2px solid transparent;
+        }
+        .code-input:focus { border-color: var(--primary); background: #fff; }
+
+        .btn-primary {
+            background: var(--primary); color: white; border: none;
+            padding: 18px; border-radius: 18px; font-weight: 700;
+            font-size: 16px; cursor: pointer; width: 100%;
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px; margin-top: 10px; transition: 0.2s;
+        }
+
+      .status-msg.danger {
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--danger);
+}
+
+        .btn-text { background: transparent; color: var(--primary); border: none; padding: 12px; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 12px; width: 100%; }
+
+        .status-msg { padding: 14px; border-radius: 14px; font-size: 14px; font-weight: 600; margin-bottom: 20px; display: none; align-items: center; gap: 8px; justify-content: center; }
+        .status-msg.success { background: rgba(52, 199, 89, 0.1); color: var(--success); }
+
+        .loader { width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 480px) {
+            .card { padding: 32px 24px; border-radius: 0; height: 100vh; width: 100vw; display: none; flex-direction: column; justify-content: center; }
+            .card.active { display: flex; }
+            body { padding: 0; background: #fff; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        
+        <div class="card active" id="view-login">
+            <div class="logo-text">FinancePro</div>
+            <span class="subtitle">Acesse sua conta via WhatsApp</span>
+            <div id="msg-login" class="status-msg"></div>
+            <form onsubmit="handleAuth(event, 'login', 'msg-login')">
+                <div class="form-group"><label>WhatsApp</label>
+                    <div class="input-wrapper"><i class="material-icons-round">chat_bubble</i>
+                        <input type="tel" class="whatsapp-mask" placeholder="(00) 00000-0000" required>
+                    </div>
+                </div>
+                <div class="form-group"><label>Senha</label>
+                    <div class="input-wrapper"><i class="material-icons-round">lock_open</i>
+                        <input type="password" placeholder="Sua senha" required>
+                    </div>
+                </div>
+                <button type="button" class="btn-text" style="text-align:right; margin:0; padding:0 4px 15px 0;" onclick="switchView('view-forgot')">Esqueceu a senha?</button>
+                <button type="submit" class="btn-primary"><span class="label">Entrar</span><div class="loader"></div></button>
+                <button type="button" class="btn-text" onclick="switchView('view-register')">Criar nova conta</button>
+            </form>
+        </div>
+
+        <div class="card" id="view-register">
+            <div class="logo-text">Nova Conta</div>
+            <span class="subtitle">Comece a organizar suas finanças</span>
+            <form onsubmit="handleAuth(event, 'goToVerify', '')">
+                <div class="form-group"><label>Nome Completo</label>
+                    <div class="input-wrapper"><i class="material-icons-round">person_outline</i><input type="text" placeholder="Seu nome" required></div>
+                </div>
+                <div class="form-group"><label>WhatsApp</label>
+                    <div class="input-wrapper"><i class="material-icons-round">chat_bubble</i><input type="tel" class="whatsapp-mask" placeholder="(00) 00000-0000" required></div>
+                </div>
+                <div class="form-group"><label>Senha</label>
+                    <div class="input-wrapper"><i class="material-icons-round">lock_open</i><input type="password" placeholder="Mínimo 6 caracteres" required></div>
+                </div>
+                <button type="submit" class="btn-primary"><span class="label">Cadastrar</span><div class="loader"></div></button>
+                <button type="button" class="btn-text" onclick="switchView('view-login')">Voltar ao login</button>
+            </form>
+        </div>
+
+        <div class="card" id="view-verify">
+            <div class="logo-text">Verificação</div>
+            <span class="subtitle">Digite o código de 4 dígitos enviado ao seu WhatsApp</span>
+            <div id="msg-verify" class="status-msg"></div>
+            <div class="code-container">
+                <input type="text" maxlength="1" class="code-input">
+                <input type="text" maxlength="1" class="code-input">
+                <input type="text" maxlength="1" class="code-input">
+                <input type="text" maxlength="1" class="code-input">
+            </div>
+            <button type="button" class="btn-primary" id="btnConfirmVerify">
+                <span class="label">Verificar</span>
+                <div class="loader"></div>
+            </button>
+            <button type="button" class="btn-text" onclick="switchView('view-login')">Cancelar</button>
+        </div>
+
+        <div class="card" id="view-forgot">
+            <div class="logo-text">Recuperar</div>
+            <span class="subtitle">Identifique sua conta para receber o código</span>
+            <form onsubmit="handleAuth(event, 'goToVerifyForgot', '')">
+                <div class="form-group"><label>WhatsApp Cadastrado</label>
+                    <div class="input-wrapper"><i class="material-icons-round">chat_bubble</i>
+                        <input type="tel" class="whatsapp-mask" placeholder="(00) 00000-0000" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary"><span class="label">Receber Código</span><div class="loader"></div></button>
+                <button type="button" class="btn-text" onclick="switchView('view-login')">Lembrei a senha</button>
+            </form>
+        </div>
+
+        <div class="card" id="view-new-password">
+            <div class="logo-text">Nova Senha</div>
+            <span class="subtitle">Crie uma senha forte e segura</span>
+            <div id="msg-new-pass" class="status-msg"></div>
+            <form onsubmit="handleAuth(event, 'finishForgot', 'msg-new-pass')">
+                <div class="form-group"><label>Nova Senha</label>
+                    <div class="input-wrapper"><i class="material-icons-round">lock_open</i><input type="password" placeholder="Nova senha" required></div>
+                </div>
+                <div class="form-group"><label>Confirmar Senha</label>
+                    <div class="input-wrapper"><i class="material-icons-round">lock_reset</i><input type="password" placeholder="Repita a senha" required></div>
+                </div>
+                <button type="submit" class="btn-primary"><span class="label">Alterar Senha</span><div class="loader"></div></button>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        let currentFlow = ''; // 'register' ou 'forgot'
+
+        function switchView(viewId) {
+            document.querySelectorAll('.card').forEach(card => card.classList.remove('active'));
+            document.querySelectorAll('.status-msg').forEach(msg => msg.style.display = 'none');
+            document.getElementById(viewId).classList.add('active');
+            
+            if(viewId === 'view-verify') {
+                setTimeout(() => document.querySelectorAll('.code-input')[0].focus(), 500);
+            }
+        }
+
+        // Máscaras e Eventos
+        document.querySelectorAll('.whatsapp-mask').forEach(input => {
+            input.addEventListener('input', (e) => {
+                let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+                e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+            });
+        });
+
+        const codeInputs = document.querySelectorAll('.code-input');
+        codeInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length === 1 && index < codeInputs.length - 1) codeInputs[index + 1].focus();
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) codeInputs[index - 1].focus();
+            });
+        });
+
+        
+
+        // BOTÃO VERIFICAR CÓDIGO (REAL)
+document.getElementById('btnConfirmVerify').onclick = () => {
+    const code = [...document.querySelectorAll('.code-input')]
+        .map(i => i.value)
+        .join('');
+
+    fetch('https://financepro-backend-nre5.onrender.com/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            if (currentFlow === 'register') {
+                showStatus(document.getElementById('msg-verify'), 'Conta verificada!', 'success');
+                setTimeout(() => switchView('view-login'), 1500);
+            } else {
+                switchView('view-new-password');
+            }
+        } else {
+            showStatus(document.getElementById('msg-verify'), 'Código inválido', 'danger');
+        }
+    });
+};
+
+
+// FUNÇÃO PRINCIPAL (100% CORRETA)
+function handleAuth(event, type, msgId) {
+    if(event) event.preventDefault();
+    
+    const btn = event ? (event.target.tagName === 'FORM' ? event.target.querySelector('.btn-primary') : event.target) : document.querySelector('.card.active .btn-primary');
+    const label = btn.querySelector('.label');
+    const loader = btn.querySelector('.loader');
+
+    btn.disabled = true;
+    label.style.display = 'none';
+    loader.style.display = 'block';
+
+    // LOGIN
+    if (type === 'login') {
+        fetch('https://financepro-backend-nre5.onrender.com/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                phone: document.querySelector('#view-login input[type="tel"]').value.replace(/\D/g, ''),
+                password: document.querySelector('#view-login input[type="password"]').value
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            resetBtn();
+
+            if (data.success) {
+                showStatus(document.getElementById(msgId), 'Login realizado!', 'success');
+            } else {
+                showStatus(document.getElementById(msgId), 'Credenciais inválidas', 'danger');
+            }
+        })
+        .catch(() => {
+            resetBtn();
+            showStatus(document.getElementById(msgId), 'Erro no servidor', 'danger');
+        });
+
+        return;
+    }
+
+    // CADASTRO → ENVIA CÓDIGO
+    if(type === 'goToVerify') {
+    currentFlow = 'register';
+
+    const name = document.querySelector('#view-register input[type="text"]').value;
+    const phone = document.querySelector('#view-register input[type="tel"]').value.replace(/\D/g, '');
+    const password = document.querySelector('#view-register input[type="password"]').value;
+
+    fetch('https://financepro-backend-nre5.onrender.com/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            name,
+            phone,
+            password
+        })
+    })
+    .then(() => {
+        return fetch('https://financepro-backend-nre5.onrender.com/send-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                phone: 'whatsapp:+55' + phone
+            })
+        });
+    });
+
+    resetBtn();
+    switchView('view-verify');
+    return;
+}
+  
+    // RECUPERAR SENHA
+    if(type === 'goToVerifyForgot') {
+        currentFlow = 'forgot';
+
+        const phone = document.querySelector('#view-forgot input[type="tel"]').value.replace(/\D/g, '');
+
+        fetch('https://financepro-backend-nre5.onrender.com/send-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                phone: 'whatsapp:+55' + phone
+            })
+        });
+
+        resetBtn();
+        switchView('view-verify');
+        return;
+    }
+
+    // OUTROS
+    resetBtn();
+
+    if(type === 'goToNewPass') {
+        switchView('view-new-password');
+    }
+    else if(type === 'finishForgot') {
+        showStatus(document.getElementById(msgId), 'Senha alterada com sucesso!', 'success');
+        setTimeout(() => switchView('view-login'), 2000);
+    }
+
+    function resetBtn() {
+        btn.disabled = false;
+        label.style.display = 'block';
+        loader.style.display = 'none';
+    }
+}
+
+        function showStatus(el, text, type) {
+            el.innerHTML = `<i class="material-icons-round" style="font-size:18px">check_circle</i> ${text}`;
+            el.className = `status-msg ${type}`;
+            el.style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
